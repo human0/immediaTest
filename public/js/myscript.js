@@ -11,33 +11,38 @@ var API_ENDPOINT = 'https://api.foursquare.com/v2/venues/search' +
   '&query=' + SEARCH +
   '&callback=?';
 
+
+$LAT = $("input[name = 'lat']");
+$LNG = $("input[name = 'lng']");;
+
 navigator.geolocation.getCurrentPosition(function(data) {
-    var lat = data['coords']['latitude'];
-    var lng = data['coords']['longitude'];
-
-    $.getJSON(API_ENDPOINT
-        .replace('CLIENT_ID', CLIENT_ID)
-        .replace('CLIENT_SECRET', CLIENT_SECRET)
-        .replace('LATLON', lat + ',' + lng), 
-        function(result, status) {
-            if (status !== 'success') return alert('Request to Foursquare failed');
-            if (result.response.venues.length < 1) return;
-            var request_data = {};
-
-            for (var i = 0; i < result.response.venues.length; i++) {
-                var venue = result.response.venues[i];
-
-                request_data[i] = {'search':SEARCH, 'name':venue.name , 'lat':venue.location.lat, 'lng':venue.location.lng};
-            }
-
-            getAndSavePics(request_data);
-    });
+    $LAT.val(data['coords']['latitude']);
+    $LNG.val(data['coords']['longitude']);
 });
 
+function getVenues(){
+  $.getJSON(API_ENDPOINT
+    .replace('CLIENT_ID', CLIENT_ID)
+    .replace('CLIENT_SECRET', CLIENT_SECRET)
+    .replace('LATLON', $LAT.val() + ',' + $LNG.val()), 
+    function(result, status) {
+      if (status !== 'success') return alert('Request to Foursquare failed');
+      if (result.response.venues.length < 1) return;
+      var request_data = {};
+
+      for (var i = 0; i < result.response.venues.length; i++) {
+          var venue = result.response.venues[i];
+
+          request_data[i] = {'search':SEARCH, 'name':venue.name , 'lat':venue.location.lat, 'lng':venue.location.lng};
+      }
+
+      getAndSavePics(request_data);
+  });
+}
 function getAndSavePics(request_data){
   $.post('/immedia_test/public/pic', {'data':request_data},function(data) {
     each(data, function(){
-        $("ul").append('<li>' +  this.name + ' (' + this.caption + ')</li>');
+        $("#new-search").append('<li>' + '<img scr="' + this.link + '">' +  this.name + ' (' + this.caption + ')</li>');
       });
     });
 }

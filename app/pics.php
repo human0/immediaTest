@@ -11,6 +11,5 @@ class pics extends Model
      *
      * @var array
      */
-    protected $fillable = ['id','name','search','caption', 'link',
-    'low_resolution','thumbnail','standard_resolution'];
+    protected $fillable = ['id','name','search','caption', 'link', 'lat', 'lng'];
 }

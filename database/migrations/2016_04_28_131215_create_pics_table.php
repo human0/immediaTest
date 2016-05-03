@@ -16,11 +16,10 @@ class CreatePicsTable extends Migration
             $table->string('id')->primary();
             $table->string('name');
             $table->string('search');
+            $table->string('lat');
+            $table->string('lng');
             $table->string('caption');
             $table->string('link');
-            $table->string('low_resolution');
-            $table->string('thumbnail');
-            $table->string('standard_resolution');
             $table->timestamps();
         });
     }

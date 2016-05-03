@@ -2,7 +2,7 @@
 
 var CLIENT_ID = 'WSRYQDSEQRXM3DVLGR35LUQLIDTHZZZHKN4WSY55B2DB0ESO';
 var CLIENT_SECRET = 'VTRS3PHDSPYOWXO4NDBPAUTBR243X1B5MRT5L0DKLSO5QFFK';
-var SEARCH = "coffee";
+var SEARCH = "hotel";
 var API_ENDPOINT = 'https://api.foursquare.com/v2/venues/search' +
   '?client_id=CLIENT_ID' +
   '&client_secret=CLIENT_SECRET' +
@@ -21,7 +21,7 @@ navigator.geolocation.getCurrentPosition(function(data) {
         .replace('LATLON', lat + ',' + lng), 
         function(result, status) {
             if (status !== 'success') return alert('Request to Foursquare failed');
-
+            if (result.response.venues.length < 1) return;
             var request_data = {};
 
             for (var i = 0; i < result.response.venues.length; i++) {
@@ -35,8 +35,9 @@ navigator.geolocation.getCurrentPosition(function(data) {
 });
 
 function getAndSavePics(request_data){
-  $.post('/pic', {'data':request_data},function(data) {
+  $.post('/immedia_test/public/pic', {'data':request_data},function(data) {
     each(data, function(){
         $("ul").append('<li>' +  this.name + ' (' + this.caption + ')</li>');
+      });
     });
 }

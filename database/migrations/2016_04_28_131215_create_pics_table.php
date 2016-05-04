@@ -16,8 +16,8 @@ class CreatePicsTable extends Migration
             $table->string('id')->primary();
             $table->string('name');
             $table->string('search');
-            $table->string('lat');
-            $table->string('lng');
+            $table->double('lat');
+            $table->double('lng');
             $table->string('caption');
             $table->string('link');
             $table->timestamps();

@@ -12,27 +12,27 @@ use App\pics;
 
 use Illuminate\Support\Facades\Input;
 
+use Illuminate\Support\Facades\View;	
+
 class PicController extends Controller
 {
 
 	public function index() {
-		//get 20 pics
-		$area = 100;
-
 		$pics = array();
+		$search = input::has('search') ? input::get('search') : 'coffee';
 
-		if(!input::has('data')){
-			$pics = pics::paginate(20);
-		}
+		$area = 10;
 
-		$count = pics::where('search',input::get('search'))
-			->where('lat', '>=', input::get("lat")-$area)->where('lat', '<=', input::get("lat")+$area)
-			->where('lng', '>=', input::get("lng")-$area)->where('lng', '<=', input::get("lng")+$area);
+		$raw = (!input::has('search')) ? 
+			pics::where('id', '!=', 0) :		
+			pics::where('search', 'LIKE', "%{$search}%")
+				->where('lat', '>=', input::get("lat")-$area)->where('lat', '<=', input::get("lat")+$area)
+				->where('lng', '>=', input::get("lng")-$area)->where('lng', '<=', input::get("lng")+$area);
 
-		$count = $pics->count();
+		$count = $raw->count();
+		$pics = $raw->paginate($count/20);
 
-		$pics = $pics->paginate(count/10);
-		return View::make('welcome', compact('pics'));
+		return View::make('welcome', compact('pics', 'search'));
 	}
 
     /**
@@ -42,44 +42,34 @@ class PicController extends Controller
 	 */
 	public function store(){
 		$pics = array();
-		foreach (input::get('data') as $data){
-			$url = "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=0edf0c91700ff7449c153710cb204820";
-			$url .= "&lat=".$data["lat"];
-			$url .= "&lon=".$data["lng"];
-			$url .= "&format=json&nojsoncallback=1";
-			$url .= "&auth_token=72157667895575375-792702598999a01a";
-			$url .= "&api_sig=831a667f2f62554b377bb35f44845c8e";
-			
-			$data_array = json_decode(file_get_contents($url), true) ['photos'] ['photo'];
-			
-			//return $data_array;
 
-			if (empty($data_array)) continue;
+		$url = "https://api.flickr.com/services/rest/?method=flickr.photos.search";
+		$url .= "&api_key=1ad998e52dfca4baa06c90efe7e5e514&per_page=10";
+		$url .= "&lat=".input::get('lat')."&lon=".input::get('lng');
+		$url .= "&radius=1&radius_units=m&format=json&nojsoncallback=1";
+		
+		$data = json_decode(file_get_contents($url), true);
+		$data_array = $data ['photos'] ['photo'];
 
-			foreach($data_array as $d){
+		if (empty($data_array)) return;
 
-				if (pics::where('id',$d['id'])->exists()) continue;
+		foreach($data_array as $d){
 
-				$pic = new pics;
-				
-				$pic->name = $data["name"];
-				$pic->search = $data['search'];
+			if (pics::where('id',$d['id'])->exists()) continue;
 
-				$pic->id = $d['id'];
-				$pic->caption = $d['title'];
+			$pic = new pics;			
+			$pic->name = input::get('name');
+			$pic->search = input::get('search');
+			$pic->lat = input::get('lat');
+			$pic->lng = input::get('lng');
+			$pic->id = $d['id'];
+			$pic->caption = $d['title'];
+			$pic->link = "https://farm{$d['farm']}.staticflickr.com/{$d['server']}/{$d['id']}_{$d['secret']}.jpg";
 
-				$farm_id = $d('farm-id');
-				$server_id = $d('server-id');
-				$secret = $d('secret');
-
-				$pic->link = "https://farm{$farm_id}.staticflickr.com/{$server_id}/{$pic->id}_{$secret}.jpg";
-
-				$pic->save();
-
-				$pics[] = $pic;
-			}
+			$pic->save();
+			$pics[] = $pic;
 		}
-
+	
 		return $pics;	
 	}
 }
